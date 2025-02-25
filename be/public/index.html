@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Camera Control</title>
+    <script src="http://127.0.0.1:5000/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <form action="">
+      <label for="cameraHostname">Camera Hostname:</label>
+      <input type="text" id="cameraHostname" name="cameraHostname" />
+      <label for="cameraUsername">Camera Username:</label>
+      <input type="text" id="cameraUsername" name="cameraUsername" />
+      <label for="cameraPassword">Camera Password:</label>
+      <input type="text" id="cameraPassword" name="cameraPassword" />
+      <button id="connect">Connect Camera</button>
+    </form>
+
+    <form action="">
+      <label for="">Stream URI</label>
+      <input type="text" id="streamUri" name="streamUri" />
+      <label for="">youtubeStreamKey</label>
+      <input
+        type="youtubeStreamKey"
+        id="youtubeStreamKey"
+        name="youtubeStreamKey"
+      />
+    </form>
+    <h1>Camera Control Interface</h1>
+
+    <button id="start">Start Stream</button>
+    <button id="stop">Stop Stream</button>
+    <button id="up">Up</button>
+    <button id="down">Down</button>
+    <button id="left">Left</button>
+    <button id="right">Right</button>
+    <button id="zoomIn">Zoom In</button>
+    <button id="zoomOut">Zoom Out</button>
+
+    <script>
+      const socket = io("http://127.0.0.1:5000");
+      const baseUrl = "http://127.0.0.1:5000/api";
+
+      document.getElementById("connect").addEventListener("click", (e) => {
+        e.preventDefault();
+        const cameraHostname = document.getElementById("cameraHostname").value;
+        const cameraUsername = document.getElementById("cameraUsername").value;
+        const cameraPassword = document.getElementById("cameraPassword").value;
+        const streamUri = document.getElementById("streamUri");
+        fetch(`${baseUrl}/connect-camera`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            cameraConfig: {
+              hostname: cameraHostname,
+              username: cameraUsername,
+              password: cameraPassword,
+              port: "80",
+            },
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data.message);
+            if (data.streamUri) streamUri.value = data.streamUri;
+          })
+          .catch((error) => console.error("Error:", error));
+      });
+
+      document.getElementById("start").addEventListener("click", () => {
+        const streamUri = document.getElementById("streamUri").value;
+        const youtubeStreamKey =
+          document.getElementById("youtubeStreamKey").value;
+        fetch(`${baseUrl}/start-stream`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            streamUri,
+            youtubeStreamKey,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => alert(data.message))
+          .catch((error) => console.error("Error:", error));
+      });
+
+      document.getElementById("stop").addEventListener("click", () => {
+        fetch(`${baseUrl}/stop-stream`, {
+          method: "POST",
+        })
+          .then((response) => response.json())
+          .then((data) => alert(data.message))
+          .catch((error) => console.error("Error:", error));
+      });
+
+      const controlCamera = (action) => {
+        const cameraHostname = document.getElementById("cameraHostname").value;
+        const cameraUsername = document.getElementById("cameraUsername").value;
+        const cameraPassword = document.getElementById("cameraPassword").value;
+
+        fetch(`${baseUrl}/control-camera`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            cameraConfig: {
+              username: cameraHostname,
+              password: cameraUsername,
+              hostname: cameraPassword,
+              port: "80",
+            },
+            action: action,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log(data.message))
+          .catch((error) => console.error("Error:", error));
+      };
+
+      document
+        .getElementById("up")
+        .addEventListener("click", () => controlCamera("up"));
+      document
+        .getElementById("down")
+        .addEventListener("click", () => controlCamera("down"));
+      document
+        .getElementById("left")
+        .addEventListener("click", () => controlCamera("left"));
+      document
+        .getElementById("right")
+        .addEventListener("click", () => controlCamera("right"));
+      document
+        .getElementById("zoomIn")
+        .addEventListener("click", () => controlCamera("zoomIn"));
+      document
+        .getElementById("zoomOut")
+        .addEventListener("click", () => controlCamera("zoomOut"));
+    </script>
+  </body>
+</html>
