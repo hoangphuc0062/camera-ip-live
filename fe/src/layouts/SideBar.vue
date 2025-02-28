@@ -20,36 +20,60 @@
           </form>
         </div>
 
-        <!-- Profile Dropdown -->
-        <div v-for="(user, index) in users" :key="index" class="relative">
-          <!-- Button để mở dropdown -->
-          <button @click="toggleDropdown(index)" class="flex items-center space-x-2 p-2 border rounded-lg w-full">
-            {{ user.ip }}
-          </button>
 
-          <!-- Dropdown Menu -->
-          <div v-if="activeDropdown === index"
-            class="absolute right-0 mt-2 w-full bg-white text-black rounded-md shadow-lg z-50 border">
-            <div class="p-4 border-b">
-              <p class="text-sm font-semibold">{{ user.name }}</p>
-              <p class="text-xs">{{ user.username }}</p>
+        <div v-for="(users, group) in groupedUsers" :key="group" class="mb-6">
+          <!-- Group Title -->
+          <h3 class="text-lg font-bold mb-2">{{ group }}</h3>
+
+          <div v-for="(user, index) in users" :key="index" class="relative">
+            <!-- Button để mở dropdown -->
+            <button @click="toggleDropdown(user.id)" class="flex items-center space-x-2 p-2 border rounded-lg w-full">
+              {{ user.ip }}
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div v-if="activeDropdown === user.id"
+              class="absolute right-0 mt-2 w-full bg-white text-black rounded-md shadow-lg z-50 border">
+              <div class="p-4 border-b">
+                <p class="text-sm font-semibold">{{ user.name }}</p>
+                <p class="text-xs">{{ user.username }}</p>
+              </div>
+              <ul class="py-1">
+                <li class="px-4 py-2 text-sm hover:bg-gray-100 hover:text-black cursor-pointer">
+                  Cài đặt
+                </li>
+                <li @click="logout(user.id)" class="px-4 py-2 text-sm text-red-500 hover:bg-gray-100 cursor-pointer">
+                  Đăng xuất
+                </li>
+              </ul>
             </div>
-            <ul class="py-1">
-              <li class="px-4 py-2 text-sm hover:bg-gray-100 hover:text-black cursor-pointer">
-                Cài đặt
-              </li>
-              <li @click="logout(index)" class="px-4 py-2 text-sm text-red-500 hover:bg-gray-100 cursor-pointer">
-                Đăng xuất
-              </li>
-            </ul>
           </div>
         </div>
       </div>
     </div>
     <div>
-      <div class=" border-t broder-gray-200 flex items-center justify-center h-[300px]">
-        <div
-          class="relative w-40 h-40 rounded-full bg-gradient-to-b from-gray-800 to-black shadow-lg flex items-center justify-center p-4">
+      <!-- dieu kien cammara -->
+      <div class=" border-t broder-gray-200 flex flex-col items-center  h-[300px] justify-between p-4">
+        <!-- zoomOut,zoomIn -->
+        <div class="flex justify-between w-full">
+          <button @click="move('zoomIn')" class="p-2 bg-gray-800 text-white rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"
+              class="w-6 h-6 text-white cursor-pointer">
+              <path
+                d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM184 296c0 13.3 10.7 24 24 24s24-10.7 24-24l0-64 64 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-64 0 0-64c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 64-64 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l64 0 0 64z" />
+            </svg></button>
+          <button @click="move('zoomOut')" class="p-2 bg-gray-800 text-white rounded-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"
+              class="w-6 h-6 text-white cursor-pointer">
+              >
+              <path
+                d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM136 184c-13.3 0-24 10.7-24 24s10.7 24 24 24l144 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-144 0z" />
+            </svg>
+          </button>
+        </div>
+        <!-- <div></div> -->
+        <div class=" relative w-40 h-40 rounded-full bg-gradient-to-b from-gray-800 to-black shadow-lg flex items-center
+            justify-center p-4">
           <!-- Nút Up -->
           <button @click="move('up')"
             class="absolute top-2 left-1/2 transform -translate-x-1/2 w-10 h-10 flex items-center justify-center rounded-full opacity-60 hover:opacity-100">
@@ -97,27 +121,33 @@
 
           </button>
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 
 const activeDropdown = ref(null);
 
 // Danh sách IP/User giả định
 const users = ref([
-  { ip: "192.168.1.1", name: "Nguyễn Văn A", username: "a@example.com" },
-  { ip: "192.168.1.2", name: "Trần Thị B", username: "b@example.com" },
-  { ip: "192.168.1.3", name: "Lê Văn C", username: "c@example.com" },
+  { id: 1, ip: "192.168.1.1", name: "John Doe", username: "johndoe", group: "Admin" },
+  { id: 2, ip: "192.168.1.2", name: "Jane Smith", username: "janesmith", group: "Admin" },
+  { id: 3, ip: "192.168.1.3", name: "Alice Brown", username: "aliceb", group: "User" },
+  { id: 4, ip: "192.168.1.4", name: "Bob White", username: "bobw", group: "User" }
 ]);
-
+const groupedUsers = computed(() => {
+  return users.value.reduce((acc, user) => {
+    acc[user.group] = acc[user.group] || [];
+    acc[user.group].push(user);
+    return acc;
+  }, {});
+});
 // Mở dropdown đúng theo index
-const toggleDropdown = (index) => {
-  activeDropdown.value = activeDropdown.value === index ? null : index;
+const toggleDropdown = (id) => {
+  activeDropdown.value = activeDropdown.value === id ? null : id;
 };
 
 // Đóng dropdown khi bấm ra ngoài
